@@ -14,4 +14,4 @@ while True:
     client_socket.send(data.upper())
     data = client_socket.recv(1024)
     print 'Client disconnected'
-    client_socket.close()S
+    client_socket.close()
