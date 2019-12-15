@@ -1,4 +1,4 @@
-import socket, threading
+import socket
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_ip = '0.0.0.0'
