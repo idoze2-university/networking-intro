@@ -1,4 +1,4 @@
-import socket,sys,time
+import socket, sys, time
 
 TCP_IP = '0.0.0.0'
 TCP_PORT = int(12345)
@@ -9,13 +9,12 @@ s.bind((TCP_IP, TCP_PORT))
 s.listen(1)
 
 while True:
-	conn, addr = s.accept()
-	print 'New connection from:', addr
-	while True:
-	    time.sleep(5)
-	    data = conn.recv(BUFFER_SIZE)
-	    if not data: break
-	    print "received:", data
-	    conn.send(data.upper()) 
-	conn.close()
-
+    conn, addr = s.accept()
+    print 'New connection from:', addr
+    while True:
+        time.sleep(5)
+        data = conn.recv(BUFFER_SIZE)
+        if not data: break
+        print "received:", data
+        conn.send(data.upper())
+    conn.close()
