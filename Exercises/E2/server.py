@@ -26,7 +26,7 @@ class File:
     host = None  # type: FileHost
 
     def get_download_string(self):
-        return self.name + ' ' + str(host)
+        return self.name + ':' + str(host)
 
 
 # Constant Variables####################
@@ -35,22 +35,14 @@ CLIENT_MODE_USER = 1  # type: int
 CLIENT_MODES = [CLIENT_MODE_LISTENING, CLIENT_MODE_USER]
 DEF_IP = '0.0.0.0'  # type: str
 DEF_PORT = 12345  # type: int
-MAX_MSG_SIZE = 2048  # type: int
+MAX_MSG_SIZE = 1024  # type: int
 ########################################
 
 if __name__ == '__main__':
     port = int(sys.argv[1]) if len(sys.argv) > 1 else DEF_PORT
     s = socket(AF_INET, SOCK_STREAM)
-    print "Connecting"  # REMOVE
-    while (1):  # REMOVE
-        try:  # REMOVE
-            s.bind((DEF_IP, port))  # REMOVE
-            break  # REMOVE
-        except:  # REMOVE
-            time.sleep(0.0001)  # REMOVE
-    print "Connected to 12345\n"  # REMOVE
-    # s.bind((DEF_IP, port))
-    s.listen(10)
+    s.bind((DEF_IP, port))
+    s.listen(1)
 
     files = []
     while True:
@@ -63,14 +55,14 @@ if __name__ == '__main__':
                     listening_port, file_list = body.split(' ', 1)
                     host = FileHost(sender[0], sender[1], listening_port)
                     for file_name in file_list.split(','):
-                        if file_name not in list(f.name for f in files):
-                            files.append(File(file_name, host))
+                        if file_name in list(f.name for f in files): # handles duplicate file names
+                            files.remove(list(f for f in files if f.name == file_name)[0])
+                        files.append(File(file_name, host))
                     conn.send('1')
 
                 elif int(client_mode) == CLIENT_MODE_USER:
                     search_pattern = conn.recv(MAX_MSG_SIZE)
-                    size = 0
-                    while not size:
+                    while search_pattern:
                         result_list = list(f for f in files if search_pattern in f.name)
                         result_list.sort(key=lambda f: f.name)
                         size = len(result_list);
@@ -80,8 +72,9 @@ if __name__ == '__main__':
                         conn.send(search_result if search_result else "0;No results.\n")
                         if size:
                             choice = int(conn.recv(MAX_MSG_SIZE))
-                            conn.send(str(result_list[choice].host)) if choice else 0
+                            conn.send(str(result_list[choice - 1].get_download_string())) if choice else 0
+                        search_pattern = conn.recv(MAX_MSG_SIZE)
         except:
-            continue
+            break
 
     s.close()

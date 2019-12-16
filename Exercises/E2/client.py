@@ -13,7 +13,8 @@ DEF_SERVER_IP = '192.168.1.21'  # type: str
 DEF_SERVER_PORT = 12345  # type: int
 DEF_LISTENING_IP = '0.0.0.0'  # type: str
 DEF_LISTENING_PORT = random.randint(1000, 10000)  # type: int
-MAX_MSG_SIZE = 2048  # type: int
+MAX_MSG_SIZE = 1024  # type: int
+DIR_PATH = "."  # type: str
 ########################################
 
 if __name__ == '__main__':
@@ -31,11 +32,11 @@ if __name__ == '__main__':
     if client_mode == CLIENT_MODE_LISTENING:
         listening_port = int(sys.argv[4]) if len(sys.argv) > 4 else DEF_LISTENING_PORT
         m += str(listening_port) + ' '
-        m += ','.join(glob.glob1("/home/idoz/University/Networking/Exercises/E2", "*.*"))
+        m += ','.join(glob.glob1(DIR_PATH, "*.*")) #get all non-directory files in PAT
         s.send(m)
         data = s.recv(MAX_MSG_SIZE)
-        if (data != '1'):
-            print "Couldn't authenticate with server."
+        if data != '1':
+            print "Couldn't communicate with server."
             exit(1)
         s.close()
         fs = socket(AF_INET, SOCK_STREAM)
@@ -44,12 +45,14 @@ if __name__ == '__main__':
         while (1):
             conn, sender = fs.accept()
             data = conn.recv(MAX_MSG_SIZE)
-            print data
-            f = open(data, "rb")
+            file_path = DIR_PATH + "/" + data
+            f = open(file_path, "rb")
             l = f.read(MAX_MSG_SIZE)
-            while (l):
-                s.send(l)
+            while l:
+                conn.send(l)
                 l = f.read(MAX_MSG_SIZE)
+            f.close()
+            conn.close()
         fs.close()
 
     elif client_mode == CLIENT_MODE_USER:
@@ -59,17 +62,27 @@ if __name__ == '__main__':
         while msg:
             s.send(msg)
             size, choices = s.recv(MAX_MSG_SIZE).split(';', 1)
-            print size
             print choices
             if int(size):
                 choice = 0
                 try:
                     choice = raw_input("Choose: ")
-                    if int(choice) in range(0, int(size)):
+                    if int(choice) in range(0, int(size) + 1):
                         s.send(choice)
-                        host_ip, host_port = s.recv(MAX_MSG_SIZE).split(':', 1)
-
-                        print data
+                        filename, host_ip, host_port = s.recv(MAX_MSG_SIZE).split(':')
+                        fp = socket(AF_INET, SOCK_STREAM)
+                        try:
+                            fp.connect((host_ip, int(host_port)))
+                            fp.send(filename)
+                            l = '.'
+                            f = open(filename, "wb")
+                            while l:
+                                l = fp.recv(MAX_MSG_SIZE)
+                                f.write(l)
+                            f.close()
+                        except:
+                            print "Encountered a problem while getting the file."
+                        fp.close()
                     else:
                         raise 0
                 except:
