@@ -2,25 +2,28 @@ import re
 from socket import socket, AF_INET, SOCK_DGRAM
 import sys
 
-
-def get_port():
-    default_port = 12345
-    port = default_port
-    try:
-        port = int(sys.argv[1])
-    except:
-        print '** No port specified, using default.'
-    return port
-
+# Constant Variables####################
+CLIENT_MODE_LISTENING = 0  # type: int
+CLIENT_MODE_USER = 1  # type: int
+CLIENT_MODES = [CLIENT_MODE_LISTENING, CLIENT_MODE_USER]
+DEF_CLIENT_MODE = CLIENT_MODE_USER  # type: int
+DEF_SERVER_IP = '192.168.1.21'  # type: str
+DEF_SERVER_PORT = 12345  # type: int
+########################################
 
 if __name__ == '__main__':
     s = socket(AF_INET, SOCK_DGRAM)
-    dest_port = get_port()
-    dest_ip = '127.0.0.1'
-    msg = raw_input("> ")
-    while msg is not 'quit':
+    client_mode = (int(sys.argv[1]) if (sys.argv[1] in CLIENT_MODES) else DEF_CLIENT_MODE) if len(
+        sys.argv) > 0 else DEF_CLIENT_MODE
+    dest_ip = sys.argv[2] if len(sys.argv) > 1 else DEF_SERVER_IP
+    dest_port = int(sys.argv[3]) if len(sys.argv) > 2 else DEF_SERVER_PORT
+
+    s.bind((dest_ip, dest_port))
+    msg = raw_input("")
+    while msg != "quit":
         if msg:
-            if int(re.search(r'\d+', msg).group()) in range(1, 6):
+            exp = re.search(r'\d+', msg)
+            if int(exp.group() if exp else 0) in range(1, 6):  # if msg has a number in in [1,6]
                 s.sendto(msg, (dest_ip, dest_port))
                 data, sender_info = s.recvfrom(2048)
                 try:
@@ -31,8 +34,7 @@ if __name__ == '__main__':
                     print '** Some error occured on server side, please try again.'
                 if body:
                     print body
-
             else:
                 print 'illegal input'
-        msg = raw_input("> ")
+        msg = raw_input("")
     s.close()
