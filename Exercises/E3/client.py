@@ -14,7 +14,7 @@ DEF_SERVER_PORT = 12345  # type: int
 DEF_LISTENING_IP = '0.0.0.0'  # type: str
 DEF_LISTENING_PORT = random.randint(1000, 10000)  # type: int
 MAX_MSG_SIZE = 1024  # type: int
-DIR_PATH = "."  # type: str
+DIR_PATH = "../E2"  # type: str
 ########################################
 
 if __name__ == '__main__':
